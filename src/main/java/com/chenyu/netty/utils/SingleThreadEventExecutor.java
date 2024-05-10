@@ -14,23 +14,15 @@ public abstract class SingleThreadEventExecutor implements Executor {
 
     private static final int ST_NOT_START = 1;
     private static final int ST_START = 2;
-
     private volatile int state = ST_NOT_START;
-
+    protected static final int DEFAULT_MAX_PENDING_TASKS = Integer.MAX_VALUE;
+    private final Queue<Runnable> taskQueue;
+    private volatile Thread thread;
+    private Executor executor;
+    private volatile boolean interrupted;
+    private final RejectedExecutionHandler rejectedExecutionHandler;
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
-
-    protected static final int DEFAULT_MAX_PENDING_TASKS = Integer.MAX_VALUE;
-
-    private final Queue<Runnable> taskQueue;
-
-    private volatile Thread thread;
-    //创建线程的执行器
-    private Executor executor;
-
-    private volatile boolean interrupted;
-
-    private final RejectedExecutionHandler rejectedExecutionHandler;
 
     public SingleThreadEventExecutor(Executor executor, EventLoopTaskQueueFactory queueFactory, ThreadFactory threadFactory) {
         this(executor, queueFactory, threadFactory, RejectedExecutionHandlers.reject());

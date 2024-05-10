@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executor;
 
 public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
@@ -40,6 +41,21 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
         }
     }
 
+    public void registerRead(SocketChannel socketChannel, NioEventLoop nioEventLoop) {
+        if (inEventLoop(Thread.currentThread())) {
+            register0(socketChannel, nioEventLoop);
+        } else {
+            nioEventLoop.execute(new Runnable() {
+                @Override
+                public void run() {
+                    register00(socketChannel, nioEventLoop);
+                    logger.info("nioEventLoop register channel in thread:{}",Thread.currentThread().getName());
+                }
+            });
+        }
+
+    }
+
     private void register0(ServerSocketChannel channel, NioEventLoop nioEventLoop) {
         try {
             channel.configureBlocking(false);
@@ -48,4 +64,26 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
             logger.error("SingleThreadEventLoop register0 error for channel {} and nioEventLoop {}", channel, nioEventLoop, e);
         }
     }
+
+    private void register00(SocketChannel channel, NioEventLoop nioEventLoop) {
+        try {
+            channel.configureBlocking(false);
+            channel.register(nioEventLoop.unwrappedSelector(), SelectionKey.OP_READ);
+        } catch (Exception e) {
+            logger.error("SingleThreadNioEventLoop register00 exception ", e);
+        }
+    }
+
+    private void register0(SocketChannel channel, NioEventLoop nioEventLoop) {
+        try {
+            channel.configureBlocking(false);
+            channel.register(nioEventLoop.unwrappedSelector(), SelectionKey.OP_CONNECT);
+        } catch (Exception e) {
+            logger.error("SingleThreadNioEventLoop register0 exception ", e);
+        }
+    }
+
+
+
+
 }
