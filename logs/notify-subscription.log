@@ -1,0 +1,67 @@
+2024-05-11 22:38:41,142 - thread create error Thread[defaultThreadFactory-1-1,5,main]
+2024-05-11 22:38:41,143 - ThreadPerTaskExecutor create new Thread
+2024-05-11 22:38:44,145 - 我没任务了！
+2024-05-11 22:38:44,147 - SingleThreadEventLoop register0 error for channel sun.nio.ch.ServerSocketChannelImpl[unbound] and nioEventLoop com.chenyu.netty.channel.nio.NioEventLoop@f5c0643
+java.lang.IllegalArgumentException
+	at java.nio.channels.spi.AbstractSelectableChannel.register(AbstractSelectableChannel.java:199)
+	at java.nio.channels.SelectableChannel.register(SelectableChannel.java:280)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.register0(SingleThreadEventLoop.java:66)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.lambda$register$0(SingleThreadEventLoop.java:34)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.safeExecute(SingleThreadEventExecutor.java:145)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasksFrom(SingleThreadEventExecutor.java:130)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:119)
+	at com.chenyu.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:72)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor$1.run(SingleThreadEventExecutor.java:85)
+	at java.lang.Thread.run(Thread.java:750)
+2024-05-11 22:38:44,160 - nioEventLoop register channel sun.nio.ch.ServerSocketChannelImpl[unbound] in thread:defaultThreadFactory-1-1
+2024-05-11 22:38:47,171 - 我没任务了！
+2024-05-11 22:38:50,181 - 我没任务了！
+2024-05-11 22:38:53,184 - 我没任务了！
+2024-05-11 22:38:56,199 - 我没任务了！
+2024-05-11 22:42:04,016 - thread create error Thread[defaultThreadFactory-1-1,5,main]
+2024-05-11 22:42:04,017 - ThreadPerTaskExecutor create new Thread
+2024-05-11 22:42:16,183 - SingleThreadEventLoop register0 error for channel sun.nio.ch.ServerSocketChannelImpl[unbound] and nioEventLoop com.chenyu.netty.channel.nio.NioEventLoop@28e67355
+java.lang.IllegalArgumentException
+	at java.nio.channels.spi.AbstractSelectableChannel.register(AbstractSelectableChannel.java:199)
+	at java.nio.channels.SelectableChannel.register(SelectableChannel.java:280)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.register0(SingleThreadEventLoop.java:66)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.lambda$register$0(SingleThreadEventLoop.java:34)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.safeExecute(SingleThreadEventExecutor.java:149)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasksFrom(SingleThreadEventExecutor.java:134)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:123)
+	at com.chenyu.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:72)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor$1.run(SingleThreadEventExecutor.java:85)
+	at java.lang.Thread.run(Thread.java:750)
+2024-05-11 22:42:16,187 - nioEventLoop register channel sun.nio.ch.ServerSocketChannelImpl[unbound] in thread:defaultThreadFactory-1-1
+2024-05-11 22:44:14,624 - thread create error Thread[defaultThreadFactory-1-1,5,main]
+2024-05-11 22:44:15,069 - ThreadPerTaskExecutor create new Thread
+2024-05-11 22:45:45,848 - SingleThreadEventLoop register0 error for channel sun.nio.ch.ServerSocketChannelImpl[unbound] and nioEventLoop com.chenyu.netty.channel.nio.NioEventLoop@54d12eee
+java.lang.IllegalArgumentException
+	at java.nio.channels.spi.AbstractSelectableChannel.register(AbstractSelectableChannel.java:199)
+	at java.nio.channels.SelectableChannel.register(SelectableChannel.java:280)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.register0(SingleThreadEventLoop.java:66)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.lambda$register$0(SingleThreadEventLoop.java:34)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.safeExecute(SingleThreadEventExecutor.java:149)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasksFrom(SingleThreadEventExecutor.java:134)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:123)
+	at com.chenyu.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:72)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor$1.run(SingleThreadEventExecutor.java:85)
+	at java.lang.Thread.run(Thread.java:750)
+2024-05-11 22:45:48,546 - nioEventLoop register channel sun.nio.ch.ServerSocketChannelImpl[unbound] in thread:defaultThreadFactory-1-1
+2024-05-11 23:19:59,126 - thread create error Thread[defaultThreadFactory-1-1,5,main]
+2024-05-11 23:19:59,126 - ThreadPerTaskExecutor create new Thread
+2024-05-11 23:20:14,426 - SingleThreadEventLoop register0 error for channel sun.nio.ch.ServerSocketChannelImpl[unbound] and nioEventLoop com.chenyu.netty.channel.nio.NioEventLoop@402b99b7
+java.lang.IllegalArgumentException
+	at java.nio.channels.spi.AbstractSelectableChannel.register(AbstractSelectableChannel.java:199)
+	at java.nio.channels.SelectableChannel.register(SelectableChannel.java:280)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.register0(SingleThreadEventLoop.java:66)
+	at com.chenyu.netty.channel.SingleThreadEventLoop.lambda$register$0(SingleThreadEventLoop.java:34)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.safeExecute(SingleThreadEventExecutor.java:149)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasksFrom(SingleThreadEventExecutor.java:134)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:123)
+	at com.chenyu.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:72)
+	at com.chenyu.netty.utils.SingleThreadEventExecutor$1.run(SingleThreadEventExecutor.java:85)
+	at java.lang.Thread.run(Thread.java:750)
+2024-05-11 23:20:23,994 - nioEventLoop register channel sun.nio.ch.ServerSocketChannelImpl[unbound] in thread:defaultThreadFactory-1-1
+2024-05-11 23:22:19,402 - thread create error Thread[defaultThreadFactory-1-1,5,main]
+2024-05-11 23:22:19,402 - ThreadPerTaskExecutor create new Thread

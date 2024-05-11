@@ -17,7 +17,6 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
     
     protected static final int DEFAULT_MAX_PENDING_TASKS = Integer.MAX_VALUE;
 
-
     public SingleThreadEventLoop(Executor executor, EventLoopTaskQueueFactory queueFactory) {
         super(executor, queueFactory, new DefaultThreadFactory());
     }
@@ -31,12 +30,20 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
         if (inEventLoop(Thread.currentThread())) {
             register0(channel, nioEventLoop);
         } else {
-            nioEventLoop.execute(new Runnable() {
-                @Override
-                public void run() {
-                    register0(channel, nioEventLoop);
-                    logger.info("nioEventLoop register channel in thread:{}",Thread.currentThread().getName());
-                }
+            nioEventLoop.execute(() -> {
+                register0(channel, nioEventLoop);
+                logger.info("nioEventLoop register channel {} in thread:{}", channel, Thread.currentThread().getName());
+            });
+        }
+    }
+    
+    public void register(SocketChannel channel, NioEventLoop nioEventLoop) {
+        if (inEventLoop(Thread.currentThread())) {
+            register0(channel, nioEventLoop);
+        } else {
+            nioEventLoop.execute(() -> {
+                register0(channel, nioEventLoop);
+                logger.info("nioEventLoop register channel {} in thread:{}",channel, Thread.currentThread().getName());
             });
         }
     }
@@ -45,12 +52,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
         if (inEventLoop(Thread.currentThread())) {
             register0(socketChannel, nioEventLoop);
         } else {
-            nioEventLoop.execute(new Runnable() {
-                @Override
-                public void run() {
-                    register00(socketChannel, nioEventLoop);
-                    logger.info("nioEventLoop register channel in thread:{}",Thread.currentThread().getName());
-                }
+            nioEventLoop.execute(() -> {
+                register00(socketChannel, nioEventLoop);
+                logger.info("nioEventLoop register channel in thread:{}",Thread.currentThread().getName());
             });
         }
 
@@ -83,7 +87,5 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
         }
     }
 
-
-
-
+    
 }

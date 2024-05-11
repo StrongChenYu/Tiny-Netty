@@ -40,15 +40,11 @@ public class Bootstrap {
     }
 
     private void doConnect0(InetSocketAddress socketAddress) {
-        nioEventLoop.execute(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    socketChannel.connect(socketAddress);
-                } catch (Exception e) {
-                    logger.error("socketChannel connect error {}", socketAddress, e);
-                }
+        nioEventLoop.execute(() -> {
+            try {
+                socketChannel.connect(socketAddress);
+            } catch (Exception e) {
+                logger.error("socketChannel connect error {}", socketAddress, e);
             }
         });
     }
