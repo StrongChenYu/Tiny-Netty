@@ -63,7 +63,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
     private void register0(ServerSocketChannel channel, NioEventLoop nioEventLoop) {
         try {
             channel.configureBlocking(false);
-            channel.register(nioEventLoop.unwrappedSelector(), SelectionKey.OP_CONNECT);
+            channel.register(nioEventLoop.unwrappedSelector(), SelectionKey.OP_ACCEPT);
         } catch (Exception e) {
             logger.error("SingleThreadEventLoop register0 error for channel {} and nioEventLoop {}", channel, nioEventLoop, e);
         }

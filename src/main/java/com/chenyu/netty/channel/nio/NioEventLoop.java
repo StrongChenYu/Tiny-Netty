@@ -116,7 +116,7 @@ public class NioEventLoop extends SingleThreadEventLoop {
                 channel.configureBlocking(false);
                 
                 worker.registerRead(channel, worker);
-                socketChannel.write(ByteBuffer.wrap("socketChannel online".getBytes()));
+                channel.write(ByteBuffer.wrap("socketChannel online".getBytes()));
                 logger.info("accept new connection from socketChannel {}", channel);
             } 
             
@@ -159,5 +159,9 @@ public class NioEventLoop extends SingleThreadEventLoop {
                 logger.info("accept info from channel info {}", new String(temp));
             }
         }
+    }
+
+    public void setWorker(NioEventLoop worker) {
+        this.worker = worker;
     }
 }

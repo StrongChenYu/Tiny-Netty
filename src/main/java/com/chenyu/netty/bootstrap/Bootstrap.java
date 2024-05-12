@@ -24,10 +24,17 @@ public class Bootstrap {
         return this;
     }
 
+    public Bootstrap socketChannel(SocketChannel socketChannel) {
+        this.socketChannel = socketChannel;
+        return this;
+    }
+    
     public Bootstrap nioEventLoop(SocketChannel socketChannel) {
         this.socketChannel = socketChannel;
         return this;
     }
+    
+    
 
     public void connect(String host, int port) {
         doConnect(new InetSocketAddress(host, port));
