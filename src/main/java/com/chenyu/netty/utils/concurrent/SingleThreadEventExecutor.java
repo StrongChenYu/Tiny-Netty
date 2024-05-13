@@ -1,4 +1,4 @@
-package com.chenyu.netty.utils;
+package com.chenyu.netty.utils.concurrent;
 
 import com.chenyu.netty.channel.EventLoopTaskQueueFactory;
 import org.slf4j.Logger;
@@ -8,7 +8,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-public abstract class SingleThreadEventExecutor implements Executor {
+public abstract class SingleThreadEventExecutor implements EventExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(SingleThreadEventExecutor.class);
 

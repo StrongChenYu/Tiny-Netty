@@ -1,4 +1,4 @@
-package com.chenyu.netty.utils;
+package com.chenyu.netty.utils.concurrent;
 
 import java.util.concurrent.TimeUnit;
 

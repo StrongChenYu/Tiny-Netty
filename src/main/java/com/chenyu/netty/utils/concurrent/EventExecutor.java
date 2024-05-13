@@ -1,6 +1,4 @@
-package com.chenyu.netty.utils;
-
-import java.util.concurrent.Executor;
+package com.chenyu.netty.utils.concurrent;
 
 public interface EventExecutor extends EventExecutorGroup {
 

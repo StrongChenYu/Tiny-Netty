@@ -1,8 +1,8 @@
 package com.chenyu.netty.channel;
 
 import com.chenyu.netty.channel.nio.NioEventLoop;
-import com.chenyu.netty.utils.DefaultThreadFactory;
-import com.chenyu.netty.utils.SingleThreadEventExecutor;
+import com.chenyu.netty.utils.concurrent.DefaultThreadFactory;
+import com.chenyu.netty.utils.concurrent.SingleThreadEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

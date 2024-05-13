@@ -1,4 +1,4 @@
-package com.chenyu.netty.utils;
+package com.chenyu.netty.utils.concurrent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

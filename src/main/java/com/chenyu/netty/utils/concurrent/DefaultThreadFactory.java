@@ -1,4 +1,4 @@
-package com.chenyu.netty.utils;
+package com.chenyu.netty.utils.concurrent;
 
 import com.chenyu.netty.utils.internal.StringUtil;
 import org.slf4j.Logger;
@@ -30,6 +30,10 @@ public class DefaultThreadFactory implements ThreadFactory {
 
     public DefaultThreadFactory(Class<?> poolType, boolean daemon, int normPriority) {
         this(toPoolName(poolType), daemon, normPriority);
+    }
+    
+    public DefaultThreadFactory(Class<?> poolType, int priority) {
+        this(poolType, false, priority);
     }
 
     public DefaultThreadFactory(String poolName, boolean daemon, int priority) {
