@@ -1,6 +1,7 @@
 package com.chenyu.netty.utils.concurrent;
 
 import com.chenyu.netty.channel.EventLoopTaskQueueFactory;
+import com.chenyu.netty.utils.internal.ObjectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,19 +25,18 @@ public abstract class SingleThreadEventExecutor implements EventExecutor {
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
 
-    public SingleThreadEventExecutor(Executor executor, EventLoopTaskQueueFactory queueFactory, ThreadFactory threadFactory) {
-        this(executor, queueFactory, threadFactory, RejectedExecutionHandlers.reject());
+    private EventExecutorGroup parent;
+    private boolean addTaskWakeUp;
+    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+                                        boolean addTaskWakeUp, Queue<Runnable> taskQueue,
+                                        RejectedExecutionHandler rejectedExecutionHandler) {
+        this.parent = parent;
+        this.addTaskWakeUp = addTaskWakeUp;
+        this.executor = executor;
+        this.taskQueue = ObjectUtil.checkNotNull(taskQueue, "taskQueue");
+        this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
-
-    public SingleThreadEventExecutor(Executor executor, EventLoopTaskQueueFactory queueFactory, ThreadFactory threadFactory, RejectedExecutionHandler rejectedHandler) {
-        if (executor == null) {
-            this.executor = new ThreadPerTaskExecutor(threadFactory);
-        }
-
-        this.taskQueue = queueFactory == null ? newTaskQueue(DEFAULT_MAX_PENDING_TASKS) : queueFactory.newTaskQueue(DEFAULT_MAX_PENDING_TASKS);
-        this.rejectedExecutionHandler = rejectedHandler;
-    }
-
+    
     private Queue<Runnable> newTaskQueue(int defaultMaxPendingTasks) {
         return new LinkedBlockingQueue<>(defaultMaxPendingTasks);
     }
@@ -170,4 +170,19 @@ public abstract class SingleThreadEventExecutor implements EventExecutor {
         }
     }
 
+
+    @Override
+    public void shutdownGracefully() {
+
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return false;
+    }
+
+    @Override
+    public void awaitTermination(Integer integer, TimeUnit timeUnit) throws InterruptedException{
+
+    }
 }

@@ -1,7 +1,7 @@
 package com.chenyu.netty.channel;
 
 import com.chenyu.netty.channel.nio.NioEventLoop;
-import com.chenyu.netty.utils.concurrent.DefaultThreadFactory;
+import com.chenyu.netty.utils.concurrent.RejectedExecutionHandler;
 import com.chenyu.netty.utils.concurrent.SingleThreadEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,18 +9,21 @@ import org.slf4j.LoggerFactory;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Queue;
 import java.util.concurrent.Executor;
 
-public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
+public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
 
     private static final Logger logger = LoggerFactory.getLogger(SingleThreadEventLoop.class);
     
     protected static final int DEFAULT_MAX_PENDING_TASKS = Integer.MAX_VALUE;
 
-    public SingleThreadEventLoop(Executor executor, EventLoopTaskQueueFactory queueFactory) {
-        super(executor, queueFactory, new DefaultThreadFactory());
+    protected SingleThreadEventLoop(EventLoopGroup parent, Executor executor,
+                                    boolean addTaskWakeUp, Queue<Runnable> taskQueue, Queue<Runnable> tailTaskQueue,
+                                    RejectedExecutionHandler rejectedExecutionHandler) {
+        super(parent, executor, addTaskWakeUp, taskQueue, rejectedExecutionHandler);
     }
-
+    
     @Override
     protected boolean hasTasks() {
         return super.hasTasks();
@@ -87,5 +90,14 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor {
         }
     }
 
+    @Override
+    public EventLoopGroup parent() {
+        return null;
+    }
+
+    @Override
+    public EventLoop next() {
+        return this;
+    }
     
 }

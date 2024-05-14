@@ -1,7 +1,10 @@
 package com.chenyu.netty.channel.nio;
 
+import com.chenyu.netty.channel.EventLoopGroup;
 import com.chenyu.netty.channel.EventLoopTaskQueueFactory;
+import com.chenyu.netty.channel.SelectStrategy;
 import com.chenyu.netty.channel.SingleThreadEventLoop;
+import com.chenyu.netty.utils.concurrent.RejectedExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,38 +13,64 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class NioEventLoop extends SingleThreadEventLoop {
     
     private static final Logger logger = LoggerFactory.getLogger(NioEventLoop.class);
     
-    private final ServerSocketChannel serverSocketChannel;
-    private final SocketChannel socketChannel;
-    private NioEventLoop worker;
+    private EventLoopGroup workerGroup;
+    private static int index = 0;
+    private int id = 0;
+    private ServerSocketChannel serverSocketChannel;
+    private SocketChannel socketChannel;
     private Selector selector;
     private final SelectorProvider selectorProvider;
+    private SelectStrategy selectStrategy;    
+    
+    
+    NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
+                        SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
+                        EventLoopTaskQueueFactory queueFactory) {
+        super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory), rejectedExecutionHandler);
 
-    public NioEventLoop(ServerSocketChannel serverSocketChannel, SocketChannel socketChannel) {
-        this(null, SelectorProvider.provider(), null, serverSocketChannel, socketChannel);
-    }
-
-    public NioEventLoop(Executor executor, SelectorProvider provider, EventLoopTaskQueueFactory taskQueueFactory, ServerSocketChannel serverSocketChannel, SocketChannel socketChannel) {
-        super(executor, taskQueueFactory);
-
-        if (provider == null) {
+        if (selectorProvider == null) {
             throw new NullPointerException("selectorProvider");
         }
-        if (serverSocketChannel != null && socketChannel != null) {
-            throw new RuntimeException("only one channel can be here! server or client!");
+        if (strategy == null) {
+            throw new NullPointerException("selectStrategy");
         }
         
-        this.selectorProvider = provider;
-        this.serverSocketChannel = serverSocketChannel;
-        this.socketChannel = socketChannel;
+        this.selectorProvider = selectorProvider;
         this.selector = openSelector();
+        selectStrategy = strategy;
+        id = index;
+        
+        logger.info("create new NioEventLoop index {}", index);
     }
+
+    public void setWorkerGroup(EventLoopGroup workerGroup) {
+        this.workerGroup = workerGroup;
+    }
+
+    public void setServerSocketChannel(ServerSocketChannel serverSocketChannel) {
+        this.serverSocketChannel = serverSocketChannel;
+    }
+
+    public void setSocketChannel(SocketChannel socketChannel) {
+        this.socketChannel = socketChannel;
+    }
+    
+    private static Queue<Runnable> newTaskQueue(EventLoopTaskQueueFactory queueFactory) {
+        if (queueFactory == null) {
+            return new LinkedBlockingQueue<>();
+        }
+        return queueFactory.newTaskQueue(DEFAULT_MAX_PENDING_TASKS);
+    }
+    
     
     private Selector openSelector() {
         //未包装过的选择器
@@ -111,13 +140,16 @@ public class NioEventLoop extends SingleThreadEventLoop {
         if (serverSocketChannel != null) {
             // 这里说明是ServerSocketChannel
             if (key.isAcceptable()) {
-                // todo:  key.channel(); 这里返回的是什么？ 是ServerSocketChannel呢还是 SocketChannel
                 SocketChannel channel = serverSocketChannel.accept();
                 channel.configureBlocking(false);
                 
-                worker.registerRead(channel, worker);
-                channel.write(ByteBuffer.wrap("socketChannel online".getBytes()));
+                NioEventLoop nioEventLoop = (NioEventLoop) workerGroup.next();
+                nioEventLoop.setSocketChannel(channel);
+                nioEventLoop.register(channel, nioEventLoop);
+
                 logger.info("accept new connection from socketChannel {}", channel);
+                
+                channel.write(ByteBuffer.wrap("socketChannel online".getBytes()));
             } 
             
             if (key.isReadable()) {
@@ -134,6 +166,7 @@ public class NioEventLoop extends SingleThreadEventLoop {
                 
                 logger.info("accept info from channel info {}", new String(temp));
             }
+            return;
         }
         
         if (socketChannel != null) {
@@ -160,8 +193,6 @@ public class NioEventLoop extends SingleThreadEventLoop {
             }
         }
     }
-
-    public void setWorker(NioEventLoop worker) {
-        this.worker = worker;
-    }
+    
+    
 }
