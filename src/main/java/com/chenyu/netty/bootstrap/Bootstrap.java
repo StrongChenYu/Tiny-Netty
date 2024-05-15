@@ -1,5 +1,6 @@
 package com.chenyu.netty.bootstrap;
 
+import com.chenyu.netty.channel.EventLoopGroup;
 import com.chenyu.netty.channel.nio.NioEventLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,13 +15,15 @@ public class Bootstrap {
     private NioEventLoop nioEventLoop;
 
     private SocketChannel socketChannel;
+    
+    private EventLoopGroup workerGroup;
 
     public Bootstrap() {
 
     }
-
-    public Bootstrap nioEventLoop(NioEventLoop nioEventLoop) {
-        this.nioEventLoop = nioEventLoop;
+    
+    public Bootstrap group(EventLoopGroup eventLoopGroup) {
+        this.workerGroup = eventLoopGroup;
         return this;
     }
 
@@ -28,21 +31,15 @@ public class Bootstrap {
         this.socketChannel = socketChannel;
         return this;
     }
-    
-    public Bootstrap nioEventLoop(SocketChannel socketChannel) {
-        this.socketChannel = socketChannel;
-        return this;
-    }
-    
-    
 
     public void connect(String host, int port) {
         doConnect(new InetSocketAddress(host, port));
     }
 
     private void doConnect(InetSocketAddress socketAddress) {
-        nioEventLoop.register(socketChannel, this.nioEventLoop);
-
+        nioEventLoop = (NioEventLoop) workerGroup.next().next();
+        nioEventLoop.setSocketChannel(socketChannel);
+        nioEventLoop.register(socketChannel, nioEventLoop);
         doConnect0(socketAddress);
     }
 
@@ -50,6 +47,7 @@ public class Bootstrap {
         nioEventLoop.execute(() -> {
             try {
                 socketChannel.connect(socketAddress);
+                logger.info("socketChannel connect success");
             } catch (Exception e) {
                 logger.error("socketChannel connect error {}", socketAddress, e);
             }

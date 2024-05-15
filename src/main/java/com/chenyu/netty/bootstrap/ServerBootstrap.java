@@ -1,5 +1,7 @@
 package com.chenyu.netty.bootstrap;
 
+import com.chenyu.netty.channel.EventLoop;
+import com.chenyu.netty.channel.EventLoopGroup;
 import com.chenyu.netty.channel.nio.NioEventLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,20 +14,22 @@ public class ServerBootstrap {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerBootstrap.class);
 
-    private NioEventLoop nioEventLoop;
     private ServerSocketChannel serverSocketChannel;
 
     private static final String DEFAULT_ADDRESS = "localhost";
-    
+    private EventLoopGroup parentGroup;
+    private EventLoopGroup workerGroup;
+    private NioEventLoop nioEventLoop;
     public ServerBootstrap() {
 
     }
-
-    public ServerBootstrap nioEventLoop(NioEventLoop nioEventLoop) {
-        this.nioEventLoop = nioEventLoop;
+    
+    public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup workerGroup) {
+        this.parentGroup = parentGroup;
+        this.workerGroup = workerGroup;
         return this;
     }
-
+    
     public ServerBootstrap serverSocketChannel(ServerSocketChannel serverSocketChannel) {
         this.serverSocketChannel = serverSocketChannel;
         return this;
@@ -44,7 +48,10 @@ public class ServerBootstrap {
     }
 
     private void doBind(SocketAddress localAddress) {
-        nioEventLoop.register(serverSocketChannel,this.nioEventLoop);
+        nioEventLoop = (NioEventLoop) parentGroup.next().next();
+        nioEventLoop.setServerSocketChannel(serverSocketChannel);
+        nioEventLoop.setWorkerGroup(workerGroup);
+        nioEventLoop.register(serverSocketChannel, nioEventLoop);
         doBind0(localAddress);
     }
 
