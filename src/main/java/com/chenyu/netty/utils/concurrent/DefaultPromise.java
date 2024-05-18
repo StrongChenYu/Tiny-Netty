@@ -2,8 +2,11 @@ package com.chenyu.netty.utils.concurrent;
 
 import com.chenyu.netty.utils.internal.ObjectUtil;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+import static com.chenyu.netty.utils.internal.ObjectUtil.checkNotNull;
 
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     
@@ -18,7 +21,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private boolean notifyingListener;
     
     public DefaultPromise(EventExecutor executor) {
-        this.executor = ObjectUtil.checkNotNull(executor, "executor");
+        this.executor = checkNotNull(executor, "executor");
     }
     
     public DefaultPromise() {
@@ -153,47 +156,170 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public boolean trySuccess(V result) {
-        return false;
+        return setSuccess0(result);
     }
 
     @Override
     public Promise<V> setFailure(Throwable cause) {
-        return null;
+        if (setFailure0(cause)) {
+            return this;
+        }
+
+        throw new IllegalStateException("complete already: " + this, cause);
+    }
+
+    private boolean setFailure0(Throwable cause) {
+        return setValue0(new CauseHolder(checkNotNull(cause, "cause")));
     }
 
     @Override
     public boolean tryFailure(Throwable cause) {
-        return false;
+        return setFailure0(cause);
     }
 
     @Override
     public boolean setUncancellable() {
-        return false;
+        if (RESULT_UPDATER.compareAndSet(this, null, UNCANCELLABLE)) {
+            return true;
+        }
+        
+        Object result = this.result;
+        return !isDone0(result) || !isCancelled0(result);
+    }
+
+    private static boolean isCancelled0(Object result) {
+        return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof CancellationException;
+    }
+
+
+    private boolean isDone0(Object result) {
+        return result != null && result != UNCANCELLABLE;
     }
 
     @Override
-    public Future<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
-        return null;
+    public Promise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
+        checkNotNull(listener, "listener");
+        
+        synchronized (this) {
+            addListener0(listener);
+        }
+        
+        if (isDone()) {
+            notifyListeners();
+        }
+        
+        return this;
+    }
+
+    private void addListener0(GenericFutureListener<? extends Future<? super V>> listener) {
+        if (listener == null) {
+            this.listeners = listener;
+        } else if (this.listeners instanceof DefaultFutureListeners) {
+            ((DefaultFutureListeners) this.listeners).add(listener);
+        } else {
+            this.listeners = new DefaultFutureListeners((GenericFutureListener<?>)this.listeners, listener);
+        }
     }
 
     @Override
-    public Future<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listener) {
-        return null;
+    public Promise<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
+        checkNotNull(listeners, "listeners");
+        synchronized (this) {
+            for (GenericFutureListener<? extends Future<? super V>> listener : listeners) {
+                if (listener == null) {
+                    break;
+                }
+                
+                addListener0(listener);
+            }
+        }
+        
+        if (isDone()) {
+            notifyListeners();
+        }
+        
+        return this;
     }
 
     @Override
-    public Future<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener) {
-        return null;
+    public Promise<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener) {
+        checkNotNull(listener, "listener");
+        synchronized (this) {
+            removeListener0(listener);
+        }
+        
+        return this;
+    }
+
+    private void removeListener0(GenericFutureListener<? extends Future<? super V>> listener) {
+        if (this.listeners instanceof DefaultFutureListeners) {
+            ((DefaultFutureListeners) this.listeners).remove(listener);
+        } else {
+            this.listeners = null;
+        }
     }
 
     @Override
-    public Future<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
-        return null;
+    public Promise<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
+        checkNotNull(listeners, "listeners");
+        synchronized (this) {
+            for (GenericFutureListener<? extends Future<? super V>> listener : listeners) {
+                if (listener == null) {
+                    break;
+                }
+
+                removeListener0(listener);
+            }
+        }
+
+        
+        return this;
     }
 
     @Override
     public Promise<V> await() throws InterruptedException {
-        return null;
+        if (isDone()) {
+            return this;
+        }
+        
+        if (Thread.interrupted()) {
+            throw new InterruptedException(toString());
+        }
+        
+        // 一个线程运行到这里的时候就说明不正常了
+        checkDeadLock();
+        
+        synchronized (this) {
+            while (!isDone()) {
+                incWaiters();
+                try {
+                    wait();
+                } finally {
+                    decWaiters();
+                }
+            }
+        }
+        
+        return this;
+    }
+
+    private void decWaiters() {
+        --waiters;
+    }
+
+    private void incWaiters() {
+        if (waiters == Short.MAX_VALUE) {
+            throw new IllegalStateException("too many waiters: " + this);
+        }
+        ++waiters;
+    }
+
+    //???? 这里怎么检测的死锁
+    protected void checkDeadLock() {
+        EventExecutor e = executor();
+        if (e != null && e.inEventLoop(Thread.currentThread())) {
+            throw new BlockingOperationException(toString());
+        }
     }
 
     @Override
@@ -249,5 +375,14 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @Override
     public boolean isDone() {
         return false;
+    }
+
+    private static final class CauseHolder {
+
+        final Throwable cause;
+
+        CauseHolder(Throwable cause) {
+            this.cause = cause;
+        }
     }
 }
