@@ -1,6 +1,6 @@
 package com.chenyu.netty.utils.concurrent;
 
-import com.chenyu.netty.utils.internal.ObjectUtil;
+import com.chenyu.netty.utils.internal.StringUtil;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
@@ -324,57 +324,164 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> awaitUninterruptibly() {
-        return null;
+        if (isDone()) {
+            return this;
+        }
+        
+        checkDeadLock();
+        
+        boolean interrupted = false;
+        synchronized (this) {
+            incWaiters();
+            try {
+                await();
+            } catch (Exception e) {
+                interrupted = true;
+            } finally {
+                decWaiters();
+            }
+        }
+                
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
+        
+        return this;
     }
 
     @Override
     public Promise<V> sync() throws InterruptedException {
-        return null;
+        await();
+        rethrowIfFailed();
+        return this;
+    }
+
+    private void rethrowIfFailed() {
+        Throwable cause = cause();
+        if (cause == null) {
+            return;
+        }
     }
 
     @Override
     public Promise<V> syncUninterruptibly() {
-        return null;
+        awaitUninterruptibly();
+        rethrowIfFailed();
+        return this;
     }
 
     @Override
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        return false;
+        return await0(unit.toNanos(timeout), true);
+    }
+
+    private boolean await0(long timeoutNanos, boolean interrupble) throws InterruptedException {
+        if (isDone()) {
+            return true;
+        }
+        
+        if (timeoutNanos <= 0) {
+            return isDone();
+        }
+        
+        // 可以被中断 并且线程的标志位设置为了true
+        if (interrupble && Thread.interrupted()) {
+            throw new InterruptedException(toString());
+        }
+        
+        checkDeadLock();
+        
+        long startTime = System.nanoTime();
+        long waitTime = timeoutNanos;
+        boolean interrupt = false;
+        try {
+            for (;;) {
+                synchronized (this) {
+                    if (isDone()) {
+                        return true;
+                    }
+
+                    incWaiters();
+
+                    try {
+                        wait(waitTime / 1000000, (int) (waitTime) % 1000000);
+                    } catch (InterruptedException e) {
+                        if (interrupble) {
+                            throw e;
+                        } else {
+                            interrupt = true;
+                        }
+                    } finally {
+                        decWaiters();
+                    }
+                }
+
+                if (isDone()) {
+                    return true;
+                } else {
+                    waitTime = timeoutNanos - (System.nanoTime() - startTime);
+                    if (waitTime <= 0) {
+                        return isDone();
+                    }
+                }
+            }
+        } finally {
+            if (interrupt) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
     public boolean await(long timeoutMillis) throws InterruptedException {
-        return false;
+        return await0(TimeUnit.MICROSECONDS.toNanos(timeoutMillis), true);
     }
 
     @Override
     public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
-        return false;
+        try {
+            return await0(unit.toNanos(timeout), false);
+        } catch (InterruptedException e) {
+            throw new InternalError();
+        }
     }
 
     @Override
     public boolean awaitUninterruptibly(long timeoutMillis) {
-        return false;
+        return awaitUninterruptibly(timeoutMillis, TimeUnit.MICROSECONDS);
     }
 
     @Override
     public V getNow() {
-        return null;
+        Object result = this.result;
+        if (result instanceof CauseHolder || result == SUCCESS || result == UNCANCELLABLE) {
+            return null;
+        }
+        return (V) result;
     }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
+        if (RESULT_UPDATER.get(this) == null
+                && RESULT_UPDATER.compareAndSet(this, null, new CauseHolder(new CancellationException()))) {
+            if (checkNotifyWaiters()) {
+                notifyListeners();
+            }
+            
+            return true;
+        }
+        
         return false;
     }
 
     @Override
     public boolean isCancelled() {
-        return false;
+        return isCancelled0(result);
     }
 
     @Override
     public boolean isDone() {
-        return false;
+        return isDone0(result);
     }
 
     private static final class CauseHolder {
@@ -384,5 +491,36 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         CauseHolder(Throwable cause) {
             this.cause = cause;
         }
+    }
+
+    @Override
+    public String toString() {
+        return toStringBuilder().toString();
+    }
+
+    protected StringBuilder toStringBuilder() {
+        StringBuilder buf = new StringBuilder(64)
+                .append(StringUtil.simpleClassName(this))
+                .append('@')
+                .append(Integer.toHexString(hashCode()));
+
+        Object result = this.result;
+        if (result == SUCCESS) {
+            buf.append("(success)");
+        } else if (result == UNCANCELLABLE) {
+            buf.append("(uncancellable)");
+        } else if (result instanceof CauseHolder) {
+            buf.append("(failure: ")
+                    .append(((CauseHolder) result).cause)
+                    .append(')');
+        } else if (result != null) {
+            buf.append("(success: ")
+                    .append(result)
+                    .append(')');
+        } else {
+            buf.append("(incomplete)");
+        }
+
+        return buf;
     }
 }
