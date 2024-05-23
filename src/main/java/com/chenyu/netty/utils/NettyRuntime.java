@@ -6,10 +6,7 @@ import com.chenyu.netty.utils.internal.SystemPropertyUtil;
 
 import java.util.Locale;
 
-/**
- * @Author: PP-jessica
- * @Description:netty中的源码，直接复制过来了，获得cpu核数
- */
+
 public final class NettyRuntime {
 
     /**

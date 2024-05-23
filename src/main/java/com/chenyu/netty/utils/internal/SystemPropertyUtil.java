@@ -3,10 +3,7 @@ package com.chenyu.netty.utils.internal;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-/**
- * @Author: PP-jessica
- * @Description:netty中的工具类，直接复制过来了
- */
+
 public final class SystemPropertyUtil {
 
 

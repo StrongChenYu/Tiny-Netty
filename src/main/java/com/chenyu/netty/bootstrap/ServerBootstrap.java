@@ -1,7 +1,6 @@
 package com.chenyu.netty.bootstrap;
 
-import com.chenyu.netty.channel.EventLoop;
-import com.chenyu.netty.channel.EventLoopGroup;
+import com.chenyu.netty.channel.*;
 import com.chenyu.netty.channel.nio.NioEventLoop;
 import com.chenyu.netty.utils.concurrent.DefaultPromise;
 import org.slf4j.Logger;
@@ -11,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 
-public class ServerBootstrap {
+public class ServerBootstrap<C extends Channel> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerBootstrap.class);
 
@@ -21,6 +20,9 @@ public class ServerBootstrap {
     private EventLoopGroup parentGroup;
     private EventLoopGroup workerGroup;
     private NioEventLoop nioEventLoop;
+    
+    private volatile ChannelFactory<? extends Channel> channelFactory;
+
     public ServerBootstrap() {
 
     }
@@ -31,31 +33,32 @@ public class ServerBootstrap {
         return this;
     }
     
-    public ServerBootstrap serverSocketChannel(ServerSocketChannel serverSocketChannel) {
-        this.serverSocketChannel = serverSocketChannel;
+    public ServerBootstrap channel(Class<? extends C> channelClass) {
+        this.channelFactory = new ReflectiveChannelFactory<C>(channelClass);
         return this;
     }
 
-    public DefaultPromise<Object> bind(String host, int inetPort) {
+    public ChannelFuture bind(String host, int inetPort) {
         return bind(new InetSocketAddress(host,inetPort));
     }
     
-    public DefaultPromise<Object> bind(int port) {
+    public ChannelFuture bind(int port) {
         return bind(DEFAULT_ADDRESS, port);
     }
 
-    public DefaultPromise<Object> bind(SocketAddress localAddress) {
+    public ChannelFuture bind(SocketAddress localAddress) {
         return doBind(localAddress);
     }
 
-    private DefaultPromise<Object> doBind(SocketAddress localAddress) {
-        nioEventLoop = (NioEventLoop) parentGroup.next().next();
-        nioEventLoop.setServerSocketChannel(serverSocketChannel);
-        nioEventLoop.setWorkerGroup(workerGroup);
-        nioEventLoop.register(serverSocketChannel, nioEventLoop);
-        DefaultPromise<Object> defaultPromise = new DefaultPromise<>(nioEventLoop);
-        doBind0(localAddress, defaultPromise);
-        return defaultPromise;
+    private ChannelFuture doBind(SocketAddress localAddress) {
+        final ChannelFuture regFuture = initAndRegister();
+        Channel channel = regFuture.channel();
+        
+        
+    }
+
+    final ChannelFuture initAndRegister() {
+        
     }
 
     private void doBind0(SocketAddress localAddress,  DefaultPromise<Object> promise) {

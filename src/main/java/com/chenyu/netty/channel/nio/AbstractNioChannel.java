@@ -1,5 +1,9 @@
-package com.chenyu.netty.channel;
+package com.chenyu.netty.channel.nio;
 
+import com.chenyu.netty.channel.AbstractChannel;
+import com.chenyu.netty.channel.Channel;
+import com.chenyu.netty.channel.ChannelPromise;
+import com.chenyu.netty.channel.EventLoop;
 import com.chenyu.netty.channel.nio.NioEventLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

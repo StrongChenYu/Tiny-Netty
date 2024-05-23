@@ -1,4 +1,6 @@
-package com.chenyu.netty.channel;
+package com.chenyu.netty.channel.nio;
+
+import com.chenyu.netty.channel.Channel;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;

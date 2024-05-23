@@ -128,6 +128,19 @@ public abstract class AbstractChannel implements Channel {
         }
     }
 
+    @Override
+    public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
+        try {
+            doBind(localAddress);
+            safeSetSuccess(promise);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected abstract void doBind(SocketAddress localAddress) throws Exception;
+
+
     private void register0(ChannelPromise promise) {
         try {
             if (!promise.setUncancellable() || !ensureOpen(promise)) {

@@ -3,10 +3,7 @@ package com.chenyu.netty.utils.internal;
 import java.util.Collection;
 
 
-/**
- * @Author: PP-jessica
- * @Description:netty中的源码，校验参数用的，这里直接复制过来
- */
+
 public final class ObjectUtil {
 
     private ObjectUtil() {
